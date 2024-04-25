@@ -42,6 +42,7 @@ async function get_filingUrls(cik) {
 
   const cikStr = String(cik).padStart(10, "0");
   const url = `https://www.sec.gov/cgi-bin/browse-edgar?CIK=${cikStr}&owner=exclude`;
+  console.log(url);
 
   const body = await httpGet({ url, headers });
   const $ = cheerio.load(body);
@@ -57,16 +58,34 @@ async function get_filingUrls(cik) {
   }
 
   try {
-    url_DEF14A = await Promise.all([processDocument("DEF 14A", $, headers)]);
+    url_DEF14A = await processDocument("DEF 14A", $, headers);
   } catch (error) {
     console.log(error);
   }
-  return { url_10K, url_DEF14A };
+
+  // Extract SIC code
+  const paragraphs = $("p.identInfo");
+
+  let SICCode = null;
+
+  paragraphs.each((i, el) => {
+    const paragraph = $(el).html();
+
+    const SICIndex = paragraph.indexOf("SIC");
+
+    if (SICIndex !== -1) {
+      const startIndex = paragraph.indexOf('">', SICIndex) + 2;
+      const endIndex = paragraph.indexOf("</a>", startIndex);
+      SICCode = paragraph.slice(startIndex, endIndex);
+      return false; // This breaks the loop after finding first SIC code
+    }
+  });
+  return { url_10K, url_DEF14A, SICCode };
 }
 
-// (async () => {
-//   const result = await get_filingUrls(885550);
-//   console.log(result);
-// })();
+(async () => {
+  const result = await get_filingUrls(1844389);
+  console.log(result);
+})();
 
 module.exports = get_filingUrls;

@@ -50,9 +50,9 @@ async function get_10k(cik) {
   }
 }
 
-(async () => {
-  const result = await get_10k(22444);
-  console.log(result);
-})();
+// (async () => {
+//   const result = await get_10k(22444);
+//   console.log(result);
+// })();
 
 module.exports = get_10k;
